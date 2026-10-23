@@ -170,7 +170,25 @@ app.get("/api/admin/check", requireAdmin, (req, res) => {
     username: req.session.adminUsername,
   });
 });
+// Get all registered gym members
+app.get("/api/members", requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM members ORDER BY id DESC"
+    );
 
+    res.json({
+      success: true,
+      members: result.rows
+    });
+  } catch (error) {
+    console.error("Failed to fetch members:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load members"
+    });
+  }
+});
 // Admin dashboard API
 app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
   res.json({
