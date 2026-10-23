@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I-JO House Gym | Admin Dashboard</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+:root {
+  --gold: #d4af37;
+  --bg: #0b0b0b;
+  --panel: #151515;
+  --border: #302918;
+  --muted: #999;
+}
+
+body {
+  background: var(--bg);
+  color: #fff;
+  min-height: 100vh;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar {
+  width: 255px;
+  height: 100vh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  padding: 30px 20px;
+  background: #080808;
+  border-right: 1px solid var(--border);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.logo span {
+  color: #fff;
+}
+
+.sidebar small {
+  color: var(--muted);
+  margin-bottom: 40px;
+  letter-spacing: 2px;
+}
+
+.nav-title {
+  color: #666;
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin: 12px 10px;
+}
+
+.sidebar a {
+  color: #aaa;
+  text-decoration: none;
+  padding: 14px 13px;
+  margin-bottom: 7px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: .25s;
+  font-size: 14px;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  color: #000;
+  background: var(--gold);
+}
+
+.sidebar a .nav-icon {
+  width: 22px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid #292929;
+  padding-top: 18px;
+}
+
+.sidebar-bottom a:hover {
+  background: #291414;
+  color: #ff7777;
+}
+
+main {
+  margin-left: 255px;
+  padding: 30px;
+  max-width: 1700px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.topbar h1 {
+  font-size: clamp(23px, 3vw, 32px);
+  margin-bottom: 9px;
+}
+
+.topbar p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.admin-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+}
+
+.admin-info small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.gold {
+  color: var(--gold);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  font-size: 19px;
+}
+
+.section-heading p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 7px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 35px;
+}
+
+.stat-card {
+  padding: 25px;
+  background: linear-gradient(145deg, #1b1b1b, #111);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: transform .25s, border-color .25s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+}
+
+.stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.stat-top p {
+  color: #bbb;
+  font-size: 14px;
+}
+
+.stat-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #302713;
+  font-size: 22px;
+}
+
+.stat-card h2 {
+  font-size: 30px;
+  margin-bottom: 10px;
+  color: var(--gold);
+}
+
+.stat-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(230px, 1fr);
+  gap: 22px;
+  margin-bottom: 30px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 25px;
+  min-width: 0;
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.panel-heading h2 {
+  font-size: 18px;
+}
+.badge {
+  background: #29230f;
+  color: var(--gold);
+  border: 1px solid #51421c;
+  border-radius: 20px;
+  padding: 7px 11px;
+  font-size: 11px;
+}
+
+.activity {
+  display: flex;
+  gap: 14px;
+  padding: 15px 0;
+  border-bottom: 1px solid #292929;
+}
+
+.activity:last-child {
+  border-bottom: 0;
+}
+
+.activity-icon {
+  min-width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #282115;
+  font-size: 18px;
+}
+
+.activity h3 {
+  font-size: 14px;
+  margin-bottom: 7px;
+}
+
+.activity p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.plan {
+  border: 1px solid #38301b;
+  background: #101010;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.plan h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.plan-price {
+  color: var(--gold);
+  font-size: 27px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.plan p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #aaa;
+}
+
+.plan-tag {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 15px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.btn-gold {
+  background: var(--gold);
+  color: #000;
+}
+
+.btn-gold:hover {
+  background: #f0d36a;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+}
+
+.btn-outline:hover {
+  background: #29230f;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  text-align: left;
+}
+
+th {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 15px 12px;
+  border-bottom: 1px solid #333;
+}
+
+td {
+  font-size: 13px;
+  padding: 17px 12px;
+  border-bottom: 1px solid #292929;
+  color: #ccc;
+}
+
+.empty {
+  text-align: center;
+  padding: 35px 10px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.full-section {
+  margin-bottom: 30px;
+}
+
+.footer {
+  padding: 22px 0;
+  border-top: 1px solid #292929;
+  color: #777;
+  font-size: 12px;
+  text-align: center;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+@media (max-width: 1050px) {
+  main {
+    padding: 24px 20px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 20px;
+  }
+
+  .sidebar small,
+  .nav-title {
+    display: none;
+  }
+
+  .logo {
+    margin-bottom: 18px;
+  }
+
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .sidebar a {
+    padding: 12px 8px;
+    font-size: 12px;
+    margin: 0;
+  }
+
+  .sidebar-bottom {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  main {
+    margin-left: 0;
+    padding: 22px 15px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .stat-card {
+    padding: 21px;
+  }
+
+  .panel {
+    padding: 18px 14px;
+  }
+
+  .admin-info {
+    width: 100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+  <div class="logo">I-JO House <span> GYM</span></div>
+  <small>FITNESS MANAGEMENT</small>
+
+  <div class="nav-title">MAIN MENU</div>
+
+  <nav>
+    <a href="#dashboard" class="active">
+      <span class="nav-icon">▦</span> Dashboard
+    </a>
+    <a href="#members">
+      <span class="nav-icon">♙</span> Members
+    </a>
+    <a href="#payments">
+      <span class="nav-icon">৳</span> Payments
+    </a>
+    <a href="#plans">
+      <span class="nav-icon">✦</span> Membership Plans
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href="index.html">
+      <span class="nav-icon">↗</span> View Website
+    </a>
+    <a href="#" id="logoutBtn">
+      <span class="nav-icon">⇥</span> Logout
+    </a>
+  </div>
+</aside>
+
+<main>
+  <header class="topbar">
+    <div>
+      <h1>Dashboard <span class="gold">.</span></h1>
+      <p>Welcome back! Here's your gym overview.</p>
+    </div>
+    <div class="admin-info">
+      <div class="avatar">A</div>
+      <div>
+        <strong>Gym Admin</strong>
+        <small>Administrator</small>
+      </div>
+    </div>
+  </header>
+
+  <section id="dashboard">
+    <div class="section-heading">
+      <div>
+        <h2>Overview</h2>
+        <p>Your gym's performance at a glance.</p>
+      </div>
+      <span class="badge">● ADMIN PANEL</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-top">
+          <p>Total Members</p>
+          <div class="stat-icon">♙</div>
+        </div>
+        <h2 id="totalMembers">—</h2>
+        <small>Registered gym members</small>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <p>New Registrations</p>
+          <div class="stat-icon">✚</div>
+        </div>
+        <h2 id="newMembers">—</h2>
+        <small>Members registered this month</small>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <p>Total Revenue</p>
+          <div class="stat-icon">৳</div>
+        </div>
+        <h2 id="revenue">— ETB</h2>
+        <small>Connect payment records to calculate</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="content-grid">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Recent Activity</h2>
+        <span class="badge">GYM UPDATES</span>
+      </div>
+
+      <div class="activity">
+        <div class="activity-icon">♙</div>
+        <div>
+          <h3>Member Management</h3>
+          <p>View your registered members in the Members section below.</p>
+        </div>
+      </div>
+
+      <div class="activity">
+        <div class="activity-icon">৳</div>
+        <div>
+          <h3>Payment Tracking</h3>
+          <p>Payment totals will be available when payment records are connected.</p>
+        </div>
+      </div>
+
+      <div class="activity">
+        <div class="activity-icon">✦</div>
+        <div>
+          <h3>Membership Plans</h3>
+          <p>Review the gym's training services and membership prices.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="plans">
+      <div class="panel-heading">
+        <h2>Membership Plans</h2>
+      </div>
+
+      <div class="plan">
+        <h3>01</h3>
+        <div class="plan-price">1,000 <small>ETB</small></div>
+        <p></p>
+      </div>
+      <div class="plan">
+        <h3>02</h3>
+        <div class="plan-price">1,200 <small>ETB</small></div>
+        <p></p>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel full-section" id="members">
+    <div class="panel-heading">
+      <div>
+        <h2>Members Management</h2>
+        <p style="color:#999;font-size:12px;margin-top:7px">
+          Review registered gym members.
+        </p>
+      </div>
+      <button class="btn btn-outline" id="refreshBtn">
+        ↻ Refresh
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Member ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="memberList">
+          <tr>
+            <td colspan="4" class="empty">
+              Members will appear here after connecting the correct API.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p id="memberMessage" style="color:#999;font-size:12px;margin-top:15px"></p>
+  </section>
+
+  <section class="panel full-section" id="payments">
+    <div class="panel-heading">
+      <h2>Payments Overview</h2>
+      <span class="badge">PAYMENT RECORDS</span>
+    </div>
+    <p style="color:#aaa;line-height:1.8;font-size:14px">
+      Payment information will appear here once your payment system and
+      database records are connected. Revenue is not estimated or fabricated.
+    </p>
+  </section>
+  <footer class="footer">
+    © 2026 I-JO House GYM · ADMIN DASHBOARD
+  </footer>
+</main>
+
+<script>
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', function () {
+    document.querySelectorAll('.sidebar nav a')
+      .forEach(item => item.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (confirm('Are you sure you want to logout?')) {
+    // Clear your application's login session here
+    window.location.href = 'login.html';
+  }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', function () {
+  loadMembers();
+});
+
+async function loadMembers() {
+  const list = document.getElementById('memberList');
+  const message = document.getElementById('memberMessage');
+
+  list.innerHTML = 
+    <tr><td colspan="4" class="empty">Loading members...</td></tr>
+  ;
+  message.textContent = '';
+
+  try {
+    // Replace this URL with the actual members endpoint in server.js.
+    const response = await fetch('http://localhost:5000/api/members');
+
+    if (!response.ok) {
+      throw new Error('Could not load members.');
+    }
+
+    const result = await response.json();
+    const members = Array.isArray(result) ? result : result.members;
+
+    if (!Array.isArray(members)) {
+      throw new Error('Unexpected API response.');
+    }
+
+    document.getElementById('totalMembers').textContent = members.length;
+
+    const thisMonth = new Date();
+    const newMembers = members.filter(member => {
+      if (!member.created_at && !member.createdAt) return false;
+      const date = new Date(member.created_at || member.createdAt);
+      return date.getMonth() === thisMonth.getMonth() &&
+             date.getFullYear() === thisMonth.getFullYear();
+    });
+
+    document.getElementById('newMembers').textContent = newMembers.length;
+
+    if (members.length === 0) {
+      list.innerHTML = 
+        <tr><td colspan="4" class="empty">No registered members found.</td></tr>
+      ;
+      return;
+    }
+
+    list.innerHTML = '';
+
+    members.forEach(member => {
+      const row = document.createElement('tr');
+
+      const values = [
+        member.id ?? member.member_id ?? member._id ?? '—',
+        member.name ?? member.full_name ?? '—',
+        member.email ?? '—',
+        'Registered'
+      ];
+
+      values.forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+
+      list.appendChild(row);
+    });
+  } catch (error) {
+    list.innerHTML = 
+      <tr>
+        <td colspan="4" class="empty">
+          Could not load members. Check your backend and API endpoint.
+        </td>
+      </tr>
+    ;
+    message.textContent = error.message;
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Our Gym</title>
+  <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #080808;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+
+  .navbar {
+    width: 100%;
+    padding: 22px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #111111;
+    border-bottom: 1px solid #c9a227;
+  }
+
+  .logo {
+    color: #ffffff;
+    font-size: 25px;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: 1px;
+  }
+
+  .logo span {
+    color: #d4af37;
+  }
+
+  .nav-link {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .nav-link:hover {
+    color: #ffffff;
+  }
+
+  .register-section {
+    min-height: calc(100vh - 75px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 18px;
+    background:
+      radial-gradient(ellipse at top, #29200b 0%, #080808 60%);
+  }
+
+  .register-box {
+    width: 100%;
+    max-width: 480px;
+    padding: 38px;
+    background: #121212;
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    border-radius: 18px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  }
+
+  .register-box h1 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+
+  .register-box h1 span {
+    color: #d4af37;
+  }
+
+  .register-box > p {
+    text-align: center;
+    color: #aaaaaa;
+    margin-bottom: 28px;
+  }
+
+  .form-group {
+    margin-bottom: 19px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #e7c85a;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 13px 14px;
+    background: #1d1d1d;
+    color: #ffffff;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    outline: none;
+    font-size: 15px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+  }
+
+  .form-group input::placeholder {
+    color: #777777;
+  }
+
+  .form-group select option {
+    background: #1d1d1d;
+    color: #ffffff;
+  }
+/* Payment Accounts Section */
+.payment-accounts {
+  width: 100%;
+  margin: 22px 0;
+  padding: 20px;
+  background: #24242b;
+  border: 1px solid #555560;
+  border-radius: 15px;
+}
+
+.payment-title {
+  color: #f5d34f;
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 15px;
+  letter-spacing: 0.3px;
+}
+
+.payment-option {
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.payment-option:hover {
+  transform: translateY(-2px);
+}
+
+.payment-option.telebirr {
+  background: linear-gradient(100deg, #173c63, #202c49);
+  border: 2px solid #36bdf5;
+  color: #70e3ff;
+  box-shadow: 0 0 8px rgba(54, 189, 245, 0.12);
+}
+
+.payment-option.cbe {
+  background: linear-gradient(100deg, #43265d, #30213f);
+  border: 2px solid #b66aff;
+  color: #e2baff;
+  box-shadow: 0 0 8px rgba(182, 106, 255, 0.12);
+}
+
+.payment-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.payment-icon {
+  font-size: 17px;
+}
+
+.payment-number {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  overflow-wrap: anywhere;
+}
+
+.copy-btn {
+  padding: 7px 10px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.payment-note {
+  color: #c4c4cc;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 14px;
+}
+
+@media (max-width: 420px) {
+  .payment-accounts {
+    padding: 13px;
+  }
+
+  .payment-option {
+    flex-wrap: wrap;
+    padding: 11px;
+  }
+
+  .payment-number {
+    font-size: 13px;
+  }
+
+  .payment-title {
+    font-size: 14px;
+  }
+}
+
+  .register-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background: #d4af37;
+    color: #080808;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  .register-btn:hover {
+    background: #f0d46c;
+    transform: translateY(-2px);
+  }
+
+  .register-footer {
+    margin-top: 24px;
+    text-align: center;
+    color: #aaaaaa;
+    font-size: 14px;
+  }
+
+  .register-footer a {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .register-footer a:hover {
+    text-decoration: underline;
+  }
+
+  #registerMessage {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  @media (max-width: 500px) {
+    .navbar {
+      padding: 18px 5%;
+    }
+
+    .register-box {
+      padding: 27px 20px;
+    }
+
+    .register-box h1 {
+      font-size: 27px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">I-JO<span> House GYM</span></a>
+  </nav>
+
+  <section class="register-section">
+    <div class="register-box">
+      <h1>Join Our <span>Gym</span></h1>
+      <p>Create your membership account</p>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name"
+                 placeholder="Enter your full name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email"
+                 placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone"
+                 placeholder="Enter your phone number" required>
+        </div>
+
+        <div class="form-group">
+          <label for="plan">Membership Plan</label>
+          <select id="plan" name="plan" required>
+            <option value="">Select a plan</option>
+            <option value="Basic">1,000 Birr</option>
+            <option value="Premium">1,200 Birr</option>
+          </select>
+        </div>
+        <!-- Payment Accounts -->
+<div class="payment-accounts">
+
+  <h3 class="payment-title">
+    PAYMENT ACCOUNTS (SEND FEE VIA):
+  </h3>
+
+  <!-- Telebirr -->
+  <div class="payment-option telebirr">
+    <span class="payment-name">
+      <span class="payment-icon">▣</span>
+      Telebirr
+    </span>
+
+    <span class="payment-number">0910163193</span>
+
+    <button
+      type="button"
+      class="copy-btn"
+      onclick="copyAccount('0910163193', this)">
+      Copy
+    </button>
+  </div>
+
+  <!-- CBE Birr -->
+  <div class="payment-option cbe">
+    <span class="payment-name">
+      <span class="payment-icon">●</span>
+      CBE Birr
+    </span>
+
+    <span class="payment-number">1000306927478</span>
+
+    <button
+      type="button"
+      class="copy-btn"
+      onclick="copyAccount('1000306927478', this)">
+      Copy
+    </button>
+  </div>
+
+  <p class="payment-note">
+    Copy the account number and send your membership fee.
+  </p>
+
+</div>
+
+<script>
+  function copyAccount(accountNumber, button) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(accountNumber)
+        .then(() => {
+          button.textContent = "Copied!";
+          setTimeout(() => {
+            button.textContent = "Copy";
+          }, 2000);
+        })
+        .catch(() => fallbackCopy(accountNumber, button));
+    } else {
+      fallbackCopy(accountNumber, button);
+    }
+  }
+
+  function fallbackCopy(accountNumber, button) {
+    const input = document.createElement("textarea");
+    input.value = accountNumber;
+    input.style.position = "fixed";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+    input.select();
+
+    try {
+      const copied = document.execCommand("copy");
+      button.textContent = copied ? "Copied!" : "Copy failed";
+    } catch (error) {
+      button.textContent = "Select manually";
+    }
+
+    document.body.removeChild(input);
+
+    setTimeout(() => {
+      button.textContent = "Copy";
+    }, 2000);
+  }
+</script>
+
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password"
+                 placeholder="At least 8 characters"
+                 minlength="8" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword"
+                 name="confirmPassword"
+                 placeholder="Repeat your password"
+                 minlength="8" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary register-btn">
+          Create Account
+        </button>
+
+        <p id="registerMessage" role="status"></p>
+      </form>
+
+      <p class="register-footer">
+        Already have an account?
+        
+        <a href="index.html" class="back-home">← Back to Home</a>
+      </p>
+    </div>
+  </section>
+
+  <script src="/js/register.js"></script>
+</body>
+</html>
