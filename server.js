@@ -1,36 +1,94 @@
 const express = require("express");
-const mysql = require("mysql2/promise");
+const { Pool } = require("pg");
 const session = require("express-session");
+const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === "production";
 
-let db;
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is missing");
+  process.exit(1);
+}
 
-if (process.env.NODE_ENV === "production") {
+if (!process.env.SESSION_SECRET) {
+  console.error("SESSION_SECRET is missing");
+  process.exit(1);
+}
+
+if (isProduction && !process.env.FRONTEND_URL) {
+  console.error("FRONTEND_URL is missing");
+  process.exit(1);
+}
+
+// PostgreSQL connection
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isProduction
+    ? { rejectUnauthorized: false }
+    : false,
+  connectionTimeoutMillis: 10000,
+  max: 5,
+});
+
+if (isProduction) {
   app.set("trust proxy", 1);
 }
+
+// Middleware
+app.use(
+  cors({
+    origin: isProduction
+      ? process.env.FRONTEND_URL
+      : ["http://localhost:5500", "http://127.0.0.1:5500"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
   session({
-    secret:
-      process.env.SESSION_SECRET ||
-      "change-this-secret-before-deployment",
+    name: "gym.sid",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 8,
     },
   })
 );
+
+// Health check
+app.get("/api/health", async (req, res) => {
+  try {
+    await db.query("SELECT 1");
+
+    res.json({
+      message: "Gym Backend is Running!",
+      database: "Connected",
+    });
+  } catch (error) {
+    console.error("Health check failed:", error.message);
+
+    res.status(503).json({
+      message: "Backend is running, but database connection failed",
+      database: "Disconnected",
+    });
+  }
+});
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({ message: "Gym Backend is Running!" });
+});
 
 // Admin protection
 function requireAdmin(req, res, next) {
@@ -48,12 +106,12 @@ function requireAdmin(req, res, next) {
   return res.redirect("/login.html");
 }
 
-// Public admin login page
+// Admin login page
 app.get("/login.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Protected admin dashboard
+// Protected admin page
 app.get("/admin.html", requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
@@ -113,7 +171,7 @@ app.get("/api/admin/check", requireAdmin, (req, res) => {
   });
 });
 
-// Protected dashboard API
+// Admin dashboard API
 app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
   res.json({
     success: true,
@@ -121,16 +179,15 @@ app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
     username: req.session.adminUsername,
   });
 });
-
 // Admin logout
 app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   req.session.destroy((err) => {
     if (err) return next(err);
 
-    res.clearCookie("connect.sid", {
+    res.clearCookie("gym.sid", {
       httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
     });
 
     res.json({
@@ -141,46 +198,44 @@ app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   });
 });
 
-// Public health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    message: "Gym Backend is Running!",
+// Serve frontend files if they exist in /public
+app.use(express.static(path.join(__dirname, "public")));
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.message);
+
+  if (res.headersSent) return next(err);
+
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
   });
 });
 
-// Serve public files after protected routes
-app.use(express.static(path.join(__dirname, "public")));
+// Start HTTP server even if database is temporarily unavailable
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Gym Backend running on port ${PORT}`);
 
-// Start server and connect to MySQL
-async function startServer() {
-  try {
-    db = mysql.createPool({
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "gym_management",
-      port: Number(process.env.DB_PORT || 3306),
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
+  db.query("SELECT 1")
+    .then(() => {
+      console.log("Supabase PostgreSQL Connected Successfully!");
+    })
+    .catch((error) => {
+      console.error("Database connection failed!");
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
     });
+});
 
-    await db.query("SELECT 1");
-
-    console.log("MySQL Connected Successfully!");
-    app.listen(PORT, () => {
-      console.log(`Gym Backend running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Database connection failed!");
-    console.error("Error code:", error.code);
-    console.error("Error message:", error.message);
-    process.exitCode = 1;
-
-    if (db) {
-      await db.end().catch(() => {});
-    }
-  }
+// Close connections gracefully
+function shutdown() {
+  server.close(() => {
+    db.end()
+      .catch((error) => console.error("Database shutdown error:", error.message))
+      .finally(() => process.exit(0));
+  });
 }
 
-startServer();
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
