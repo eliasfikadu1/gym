@@ -628,7 +628,6 @@ td {
       </div>
     </section>
   </div>
-
   <section class="panel full-section" id="members">
     <div class="panel-heading">
       <div>
@@ -712,7 +711,7 @@ async function loadMembers() {
 
   try {
     // Replace this URL with the actual members endpoint in server.js.
-    const response = await fetch('http://localhost:5000/api/members');
+    const response = await fetch('https://gym-cdb7.onrender.com/api/members');
 
     if (!response.ok) {
       throw new Error('Could not load members.');
