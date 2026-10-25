@@ -216,6 +216,61 @@
   line-height: 1.6;
   margin-top: 14px;
 }
+/* Payment Screenshot Upload */
+#paymentScreenshot {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background-color: #181818;
+  color: #ffffff;
+  border: 2px dashed #d4af37;
+  border-radius: 10px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease,
+              background-color 0.3s ease;
+}
+
+#paymentScreenshot:hover {
+  border-color: #ffd700;
+  background-color: #222222;
+}
+
+#paymentScreenshot:focus {
+  outline: 2px solid #d4af37;
+  outline-offset: 3px;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 8px;
+  color: #bbbbbb;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.form-group label[for="paymentScreenshot"] {
+  display: block;
+  margin-bottom: 8px;
+  color: #d4af37;
+  font-weight: 600;
+}
+
+#paymentScreenshot::file-selector-button {
+  background-color: #d4af37;
+  color: #111111;
+  border: none;
+  padding: 10px 14px;
+  margin-right: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#paymentScreenshot::file-selector-button:hover {
+  background-color: #ffd700;
+}
 
 @media (max-width: 420px) {
   .payment-accounts {
@@ -304,7 +359,7 @@
       <h1>Join Our <span>Gym</span></h1>
       <p>Create your membership account</p>
 
-      <form id="registerForm">
+      <form id="registerForm" enctype="multipart/form-data">
         <div class="form-group">
           <label for="name">Full Name</label>
           <input type="text" id="name" name="name"
@@ -418,20 +473,25 @@
 </script>
 
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password"
-                 placeholder="At least 8 characters"
-                 minlength="8" required>
-        </div>
+       <!-- Payment Screenshot Upload -->
+<div class="form-group">
+  <label for="paymentScreenshot">
+    Upload Payment Screenshot
+  </label>
 
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input type="password" id="confirmPassword"
-                 name="confirmPassword"
-                 placeholder="Repeat your password"
-                 minlength="8" required>
-        </div>
+  <input
+    type="file"
+    id="paymentScreenshot"
+    name="paymentScreenshot"
+    accept="image/png, image/jpeg, image/jpg, image/webp"
+    required
+  >
+
+  <small>
+    Upload a screenshot of your payment.
+    Accepted formats: JPG, PNG, WEBP.
+  </small>
+</div>
 
         <button type="submit" class="btn btn-primary register-btn">
           Create Account
@@ -441,7 +501,7 @@
       </form>
 
       <p class="register-footer">
-        Already have an account?
+        Already have an account?<br><br>
         
         <a href="index.html" class="back-home">← Back to Home</a>
       </p>
