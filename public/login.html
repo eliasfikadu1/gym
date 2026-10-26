@@ -186,33 +186,43 @@ document
 
     const form = event.currentTarget;
     const message = document.getElementById("loginMessage");
+    const button = form.querySelector('button[type="submit"]');
 
     const username = form.elements.username.value.trim();
     const password = form.elements.password.value;
 
+    message.textContent = "";
+    button.disabled = true;
+    button.textContent = "Logging in...";
+
     try {
-     const response = await fetch(
-  "https://gym-cdb7.onrender.com/api/admin/login",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
-    body: JSON.stringify({ username, password })
-  }
-);
+      const response = await fetch(
+        "https://gym-cdb7.onrender.com/api/admin/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ username, password })
+        }
+      );
 
       const result = await response.json();
 
       if (response.ok && result.success) {
-        window.location.href = result.redirect;
+        window.location.href = result.redirect || "admin.html";
       } else {
         message.textContent =
-          result.message || "Login failed";
+          result.message || "Invalid username or password.";
       }
     } catch (error) {
-      message.textContent = "Server connection failed.";
+      console.error("Login error:", error);
+      message.textContent =
+        "Server connection failed. Check your connection and try again.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "Login";
     }
   });
 </script>
