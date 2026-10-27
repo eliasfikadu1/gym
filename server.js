@@ -155,7 +155,7 @@ app.post("/api/admin/login", (req, res, next) => {
       res.json({
         success: true,
         message: "Admin login successful",
-        redirect: ${frontendUrl}/admin.html
+        redirect: `${frontendUrl}/admin.html`
       });
     });
   });
@@ -212,7 +212,7 @@ app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
     res.json({
       success: true,
       message: "Logged out successfully",
-      redirect: ${frontendUrl}/login.html
+      redirect: `${frontendUrl}/login.html`
     });
   });
 });
