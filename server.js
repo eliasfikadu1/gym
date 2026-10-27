@@ -109,7 +109,7 @@ function requireAdmin(req, res, next) {
     });
   }
 
-  return res.redirect(${frontendUrl}/login.html);
+  return res.redirect(`${frontendUrl}/login.html`);
 }
 
 // Login page
