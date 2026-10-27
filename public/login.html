@@ -1,230 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gym Login</title>
-    <style>
-      * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I-JO House GYM | Admin Login</title>
 
-body {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    font-family: Arial, Helvetica, sans-serif;
-    background: linear-gradient(135deg, #080808, #1c1c1c, #080808);
-    color: #ffffff;
-}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-/* Login Box */
-.login-box {
-    width: 100%;
-    max-width: 420px;
-    padding: 40px 32px;
-    background: #151515;
-    border: 1px solid rgba(212, 175, 55, 0.4);
-    border-radius: 16px;
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
-    text-align: center;
-}
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #080808, #1c1c1c, #080808);
+      color: #fff;
+    }
 
-/* Logo */
-.logo {
-    font-size: 29px;
-    font-weight: 800;
-    color: #d4af37;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-}
-
-.subtitle {
-    font-size: 14px;
-    color: #aaaaaa;
-    margin-bottom: 32px;
-    line-height: 1.6;
-}
-
-/* Heading */
-.login-box h2 {
-    font-size: 25px;
-    margin-bottom: 25px;
-    color: #ffffff;
-}
-
-.login-box h2::after {
-    content: "";
-    display: block;
-    width: 55px;
-    height: 3px;
-    margin: 12px auto 0;
-    background: #d4af37;
-    border-radius: 5px;
-}
-
-/* Form */
-#adminLoginForm {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-#adminLoginForm input {
-    width: 100%;
-    padding: 15px 16px;
-    background: #222222;
-    color: #ffffff;
-    border: 1px solid #383838;
-    border-radius: 8px;
-    font-size: 15px;
-    outline: none;
-    transition: 0.3s ease;
-}
-
-#adminLoginForm input::placeholder {
-    color: #999999;
-}
-
-#adminLoginForm input:focus {
-    border-color: #d4af37;
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
-}
-
-/* Login Button */
-#adminLoginForm button {
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #f3d46b, #c49b21);
-    color: #111111;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#adminLoginForm button:hover {
-    background: linear-gradient(135deg, #ffe99a, #d4af37);
-    transform: translateY(-2px);
-    box-shadow: 0 7px 20px rgba(212, 175, 55, 0.2);
-}
-
-#adminLoginForm button:active {
-    transform: translateY(0);
-}
-
-/* Login Message */
-#loginMessage {
-    font-size: 14px;
-    line-height: 1.5;
-    min-height: 20px;
-    overflow-wrap: anywhere;
-    color: #ff7777;
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
     .login-box {
-        padding: 32px 22px;
-        border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 32px;
+      background: #151515;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 16px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+      text-align: center;
     }
 
     .logo {
-        font-size: 24px;
+      font-size: 27px;
+      font-weight: 800;
+      color: #d4af37;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
     }
 
-    .login-box h2 {
-        font-size: 22px;
+    .subtitle {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 32px;
+      line-height: 1.6;
     }
 
-    #adminLoginForm input,
+    h2 {
+      font-size: 25px;
+      margin-bottom: 25px;
+    }
+
+    h2::after {
+      content: "";
+      display: block;
+      width: 55px;
+      height: 3px;
+      margin: 12px auto 0;
+      background: #d4af37;
+      border-radius: 5px;
+    }
+
+    #adminLoginForm {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    #adminLoginForm input {
+      width: 100%;
+      padding: 15px 16px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #383838;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    #adminLoginForm input:focus {
+      border-color: #d4af37;
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+    }
+
+    #adminLoginForm input::placeholder {
+      color: #999;
+    }
+
     #adminLoginForm button {
-        padding: 14px;
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #f3d46b, #c49b21);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
     }
-}
-    </style>
+
+    #adminLoginForm button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    #loginMessage {
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 20px;
+      overflow-wrap: anywhere;
+      color: #ff7777;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 22px;
+      color: #d4af37;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 32px 22px;
+      }
+
+      .logo {
+        font-size: 23px;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <main class="login-box">
+    <div class="logo">I-JO House GYM</div>
+    <p class="subtitle">Your fitness journey starts here.</p>
 
-    <div class="login-box">
-        <div class="logo">I-JO House GYM</div>
-        <p class="subtitle">Your fitness journey starts here.</p>
+    <h2>Admin Login</h2>
 
-        <h2>Admin Login</h2>
-        <form id="adminLoginForm">
-  <input
-    type="text"
-    name="username"
-    placeholder="Admin Username"
-    required
-  />
+    <form id="adminLoginForm">
+      <input
+        type="text"
+        name="username"
+        placeholder="Admin Username"
+        autocomplete="username"
+        required
+      >
 
-  <input
-    type="password"
-    name="password"
-    placeholder="Admin Password"
-    required
-  />
+      <input
+        type="password"
+        name="password"
+        placeholder="Admin Password"
+        autocomplete="current-password"
+        required
+      >
 
-  <button type="submit">Login</button>
-  <p id="loginMessage"></p>
-</form>
+      <button type="submit">Login</button>
+      <p id="loginMessage" role="status" aria-live="polite"></p>
+    </form>
 
+    <a class="back-link" href="index.html">← Back to Home</a>
+  </main>
 
-<script>
-document
-  .getElementById("adminLoginForm")
-  .addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    const form = event.currentTarget;
+  <script>
+    const form = document.getElementById("adminLoginForm");
     const message = document.getElementById("loginMessage");
     const button = form.querySelector('button[type="submit"]');
 
-    const username = form.elements.username.value.trim();
-    const password = form.elements.password.value;
+    // Render backend URL
+    const API_URL = "https://gym-cdb7.onrender.com";
 
-    message.textContent = "";
-    button.disabled = true;
-    button.textContent = "Logging in...";
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
 
-    try {
-      const response = await fetch(
-        "https://gym-cdb7.onrender.com/api/admin/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({ username, password })
+      const username = form.elements.username.value.trim();
+      const password = form.elements.password.value;
+
+      message.textContent = "";
+      button.disabled = true;
+      button.textContent = "Logging in...";
+try {
+        const response = await fetch(
+          `${API_URL}/api/admin/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({ username, password })
+          }
+        );
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result.success) {
+          if (response.status === 404) {
+            message.textContent =
+              "Login API not found. Check the backend route.";
+          } else if (response.status >= 500) {
+            message.textContent =
+              "Backend error. Check the Render logs.";
+          } else {
+            message.textContent =
+              result.message || "Invalid username or password.";
+          }
+          return;
         }
-      );
 
-      const result = await response.json();
+        // Redirect after successful authentication
+        window.location.replace(
+          result.redirect || "admin.html"
+        );
 
-      if (response.ok && result.success) {
-        window.location.href = result.redirect || "admin.html";
-      } else {
+      } catch (error) {
+        console.error("Login error:", error);
         message.textContent =
-          result.message || "Invalid username or password.";
+          "Cannot connect to the server. Check the backend URL, CORS, and network.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Login";
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      message.textContent =
-        "Server connection failed. Check your connection and try again.";
-    } finally {
-      button.disabled = false;
-      button.textContent = "Login";
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
