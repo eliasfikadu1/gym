@@ -9,6 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
 
+const frontendUrl = (
+  process.env.FRONTEND_URL ||
+  "https://i-jogym-house.vercel.app"
+).replace(/\/$/, "");
+
+// Required environment variables
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is missing");
   process.exit(1);
@@ -19,68 +25,68 @@ if (!process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
-if (isProduction && !process.env.FRONTEND_URL) {
-  console.error("FRONTEND_URL is missing");
+if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+  console.error("Admin credentials are missing");
   process.exit(1);
 }
 
-// PostgreSQL connection
+// Trust Render proxy when using secure cookies
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
+
+// CORS: configure only once
+app.use(cors({
+  origin: [
+    frontendUrl,
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// PostgreSQL / Supabase
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isProduction
     ? { rejectUnauthorized: false }
     : false,
   connectionTimeoutMillis: 10000,
-  max: 5,
+  max: 5
 });
 
-if (isProduction) {
-  app.set("trust proxy", 1);
-}
-
-// Middleware
-app.use(
-  cors({
-    origin: isProduction
-      ? process.env.FRONTEND_URL
-      : ["http://localhost:5500", "http://127.0.0.1:5500"],
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use(
-  session({
-    name: "gym.sid",
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      maxAge: 1000 * 60 * 60 * 8,
-    },
-  })
-);
+// Session: configure only once
+app.use(session({
+  name: "gym.sid",
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 1000 * 60 * 60 * 8
+  }
+}));
 
 // Health check
 app.get("/api/health", async (req, res) => {
   try {
     await db.query("SELECT 1");
-
     res.json({
       message: "Gym Backend is Running!",
-      database: "Connected",
+      database: "Connected"
     });
   } catch (error) {
     console.error("Health check failed:", error.message);
-
     res.status(503).json({
       message: "Backend is running, but database connection failed",
-      database: "Disconnected",
+      database: "Disconnected"
     });
   }
 });
@@ -99,14 +105,14 @@ function requireAdmin(req, res, next) {
   if (req.path.startsWith("/api/")) {
     return res.status(401).json({
       success: false,
-      message: "Admin login required",
+      message: "Admin login required"
     });
   }
 
-  return res.redirect("/login.html");
+  return res.redirect(${frontendUrl}/login.html);
 }
 
-// Admin login page
+// Login page
 app.get("/login.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
@@ -118,19 +124,12 @@ app.get("/admin.html", requireAdmin, (req, res) => {
 
 // Admin login API
 app.post("/api/admin/login", (req, res, next) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body || {};
 
   if (!username || !password) {
     return res.status(400).json({
       success: false,
-      message: "Username and password are required",
-    });
-  }
-
-  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
-    return res.status(500).json({
-      success: false,
-      message: "Admin credentials are not configured",
+      message: "Username and password are required"
     });
   }
 
@@ -140,7 +139,7 @@ app.post("/api/admin/login", (req, res, next) => {
   ) {
     return res.status(401).json({
       success: false,
-      message: "Invalid admin username or password",
+      message: "Invalid admin username or password"
     });
   }
 
@@ -156,7 +155,7 @@ app.post("/api/admin/login", (req, res, next) => {
       res.json({
         success: true,
         message: "Admin login successful",
-        redirect: "/admin.html",
+        redirect: ${frontendUrl}/admin.html
       });
     });
   });
@@ -167,10 +166,10 @@ app.get("/api/admin/check", requireAdmin, (req, res) => {
   res.json({
     success: true,
     isAdmin: true,
-    username: req.session.adminUsername,
+    username: req.session.adminUsername
   });
 });
-// Get all registered gym members
+// Get registered gym members
 app.get("/api/members", requireAdmin, async (req, res) => {
   try {
     const result = await db.query(
@@ -189,14 +188,16 @@ app.get("/api/members", requireAdmin, async (req, res) => {
     });
   }
 });
+
 // Admin dashboard API
 app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
   res.json({
     success: true,
     message: "Welcome to the Admin Dashboard",
-    username: req.session.adminUsername,
+    username: req.session.adminUsername
   });
 });
+
 // Admin logout
 app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   req.session.destroy((err) => {
@@ -205,18 +206,18 @@ app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
     res.clearCookie("gym.sid", {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
+      sameSite: isProduction ? "none" : "lax"
     });
 
     res.json({
       success: true,
       message: "Logged out successfully",
-      redirect: "/login.html",
+      redirect: ${frontendUrl}/login.html
     });
   });
 });
 
-// Serve frontend files if they exist in /public
+// Serve backend public files, if present
 app.use(express.static(path.join(__dirname, "public")));
 
 // Error handler
@@ -227,11 +228,11 @@ app.use((err, req, res, next) => {
 
   res.status(500).json({
     success: false,
-    message: "Internal server error",
+    message: "Internal server error"
   });
 });
 
-// Start HTTP server even if database is temporarily unavailable
+// Start server
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Gym Backend running on port ${PORT}`);
 
@@ -246,11 +247,13 @@ const server = app.listen(PORT, "0.0.0.0", () => {
     });
 });
 
-// Close connections gracefully
+// Graceful shutdown
 function shutdown() {
   server.close(() => {
     db.end()
-      .catch((error) => console.error("Database shutdown error:", error.message))
+      .catch((error) => {
+        console.error("Database shutdown error:", error.message);
+      })
       .finally(() => process.exit(0));
   });
 }
