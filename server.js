@@ -123,8 +123,11 @@ app.get("/admin.html", requireAdmin, (req, res) => {
 });
 
 // Admin login API
-app.post("/api/admin/login", (req, res, next) => {
-  const { username, password } = req.body || {};
+app.post("/api/admin/login", async (req, res, next) => {
+  const { adminUsername, adminPassword } = req.body || {};
+
+  // Continue with your existing credential verification here.
+});
 
   if (!username || !password) {
     return res.status(400).json({

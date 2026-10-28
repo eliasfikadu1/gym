@@ -172,7 +172,6 @@
     const message = document.getElementById("loginMessage");
     const button = form.querySelector('button[type="submit"]');
 
-    // Render backend URL
     const API_URL = "https://gym-cdb7.onrender.com";
 
     form.addEventListener("submit", async function (event) {
@@ -184,7 +183,7 @@
       message.textContent = "";
       button.disabled = true;
       button.textContent = "Logging in...";
-try {
+      try {
         const response = await fetch(
           `${API_URL}/api/admin/login`,
           {
@@ -193,35 +192,33 @@ try {
               "Content-Type": "application/json"
             },
             credentials: "include",
-            body: JSON.stringify({ username, password })
+           body: JSON.stringify({
+  adminUsername: username,
+  adminPassword: password
+})
           }
         );
 
         const result = await response.json().catch(() => ({}));
 
-        if (!response.ok || !result.success) {
-          if (response.status === 404) {
-            message.textContent =
-              "Login API not found. Check the backend route.";
-          } else if (response.status >= 500) {
-            message.textContent =
-              "Backend error. Check the Render logs.";
-          } else {
-            message.textContent =
-              result.message || "Invalid username or password.";
-          }
+        if (!response.ok || result.success !== true) {
+          message.textContent =
+            result.message ||
+            (response.status === 404
+              ? "Login API not found. Check the backend route."
+              : "Login failed. Check your username and password.");
           return;
         }
 
-        // Redirect after successful authentication
         window.location.replace(
           result.redirect || "admin.html"
         );
 
       } catch (error) {
         console.error("Login error:", error);
+
         message.textContent =
-          "Cannot connect to the server. Check the backend URL, CORS, and network.";
+          "Cannot connect to the server. Check backend, CORS, and network.";
       } finally {
         button.disabled = false;
         button.textContent = "Login";
