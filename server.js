@@ -118,7 +118,7 @@ function requireAdmin(req, res, next) {
     });
   }
 
-  return res.redirect(${frontendUrl}/login.html);
+  return res.redirect(`${frontendUrl}/login.html`);
 }
 
 // Login page
@@ -180,7 +180,7 @@ app.post("/api/admin/login", (req, res, next) => {
       return res.json({
         success: true,
         message: "Login successful",
-        redirect: ${backendUrl}/admin.html
+        redirect: `${backendUrl}/admin.html`
       });
     });
   });
@@ -253,7 +253,7 @@ app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
     return res.json({
       success: true,
       message: "Logged out successfully",
-      redirect: ${frontendUrl}/login.html
+      redirect: `${frontendUrl}/login.html`
     });
   });
 });
