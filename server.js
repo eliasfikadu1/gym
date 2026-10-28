@@ -2,10 +2,34 @@ const express = require("express");
 const { Pool } = require("pg");
 const session = require("express-session");
 const cors = require("cors");
+const multer = require("multer");
+const { createClient } = require("@supabase/supabase-js");
 const path = require("path");
 require("dotenv").config();
 
 const app = express();
+const supabaseStorage = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+
+    cb(new Error("Upload JPG, PNG, or WebP images only."));
+  }
+});
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -210,12 +234,58 @@ app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
     username: req.session.adminUsername
   });
 });
+// Register member and upload payment screenshot
+app.post(
+  "/api/members",
+  upload.single("paymentScreenshot"),
+  async (req, res) => {
+    let uploadedPath;
+
+    try {
+      const { name, email, phone, plan } = req.body;
+
+      if (!name || !email || !phone || !plan || !req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Fill in all fields and upload your payment screenshot."
+        });
+      }
+
+      if (!["Basic", "Premium"].includes(plan)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid membership plan."
+        });
+      }
+
+      const extension = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp"
+      }[req.file.mimetype];
+    } catch (error) {
+      console.error("Registration error:", error.message);
+
+      if (uploadedPath) {
+        await supabaseStorage.storage
+          .from("payment-screenshots")
+          .remove([uploadedPath])
+          .catch(() => {});
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Registration failed. Please check the server configuration."
+      });
+    }
+  }
+);
 
 // Get registered members
 app.get("/api/members", requireAdmin, async (req, res) => {
   try {
     const result = await db.query(
-      "SELECT * FROM members ORDER BY id DESC"
+      "SELECT * FROM public.members ORDER BY id DESC"
     );
 
     res.json({
