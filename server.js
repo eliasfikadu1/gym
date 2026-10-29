@@ -3,15 +3,24 @@ const { Pool } = require("pg");
 const session = require("express-session");
 const cors = require("cors");
 const multer = require("multer");
-const { createClient } = require("@supabase/supabase-js");
-const path = require("path");
 require("dotenv").config();
 
+const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
+
 const app = express();
-const supabaseStorage = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error(
+    "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable"
+  );
+  process.exit(1);
+}
+
+const supabaseStorage = createClient(supabaseUrl, supabaseKey);
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -371,6 +380,8 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
+ PORT = process.env.PORT || 10000;
+
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Gym Backend running on port ${PORT}`);
 
