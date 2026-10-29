@@ -239,7 +239,7 @@ app.post(
   "/api/members",
   upload.single("paymentScreenshot"),
   async (req, res) => {
-    let uploadedPath;
+    let uploadedPath = null;
 
     try {
       const { name, email, phone, plan } = req.body;
@@ -258,11 +258,58 @@ app.post(
         });
       }
 
-      const extension = {
+      const extensions = {
         "image/jpeg": "jpg",
         "image/png": "png",
         "image/webp": "webp"
-      }[req.file.mimetype];
+      };
+
+      const extension = extensions[req.file.mimetype];
+
+      if (!extension) {
+        return res.status(400).json({
+          success: false,
+          message: "Only JPG, PNG, and WEBP images are allowed."
+        });
+      }
+
+      // Upload payment screenshot to Supabase Storage
+      uploadedPath = `payments/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}.${extension}`;
+
+      const { error: uploadError } =
+        await supabaseStorage.storage
+          .from("payment-screenshots")
+          .upload(uploadedPath, req.file.buffer, {
+            contentType: req.file.mimetype,
+            upsert: false
+          });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Save member information in Supabase PostgreSQL
+      const result = await db.query(
+        `INSERT INTO public.members
+          (full_name, email, phone, membership_plan)
+         VALUES ($1, $2, $3, $4)
+         RETURNING *`,
+        [
+          name.trim(),
+          email.trim(),
+          phone.trim(),
+          plan
+        ]
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "Registration successful!",
+        member: result.rows[0]
+      });
+
     } catch (error) {
       console.error("Registration error:", error.message);
 
@@ -275,33 +322,11 @@ app.post(
 
       return res.status(500).json({
         success: false,
-        message: "Registration failed. Please check the server configuration."
+        message: "Registration failed. Please try again."
       });
     }
   }
 );
-
-// Get registered members
-app.get("/api/members", requireAdmin, async (req, res) => {
-  try {
-    const result = await db.query(
-      "SELECT * FROM public.members ORDER BY id DESC"
-    );
-
-    res.json({
-      success: true,
-      members: result.rows
-    });
-  } catch (error) {
-    console.error("Failed to fetch members:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to load members"
-    });
-  }
-});
-
 // Admin logout
 app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   req.session.destroy((err) => {
