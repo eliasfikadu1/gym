@@ -363,9 +363,10 @@ app.get("/api/members", async (req, res) => {
         full_name,
         email,
         phone,
-        plan,
+        membership_plan AS plan,
         payment_screenshot,
         payment_status,
+        created_at
       FROM public.members
       ORDER BY created_at DESC
     `);
@@ -383,7 +384,7 @@ app.get("/api/members", async (req, res) => {
                 3600
               );
 
-          if (!error) {
+          if (!error && data) {
             screenshotUrl = data.signedUrl;
           }
         }
@@ -405,7 +406,7 @@ app.get("/api/members", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to retrieve members"
+      message: error.message || "Failed to retrieve members"
     });
   }
 });
