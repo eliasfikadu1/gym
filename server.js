@@ -262,6 +262,7 @@ app.post(
     try {
       const { name, email, phone, plan } = req.body;
 
+      // Validate fields
       if (!name || !email || !phone || !plan || !req.file) {
         return res.status(400).json({
           success: false,
@@ -291,7 +292,7 @@ app.post(
         });
       }
 
-      // Upload screenshot
+      // Upload payment screenshot
       uploadedPath = `payments/${Date.now()}-${Math.random()
         .toString(36)
         .slice(2)}.${extension}`;
@@ -306,7 +307,7 @@ app.post(
 
       if (uploadError) throw uploadError;
 
-      // Save member in PostgreSQL
+      // Save member to Supabase PostgreSQL
       const result = await db.query(`
         INSERT INTO public.members
         (
@@ -329,6 +330,8 @@ app.post(
         ]
       );
 
+      console.log("New member registered:", result.rows[0]);
+
       return res.status(201).json({
         success: true,
         message: "Registration successful!",
@@ -347,7 +350,7 @@ app.post(
 
       return res.status(500).json({
         success: false,
-        message: "Registration failed. Please try again."
+        message: error.message || "Registration failed."
       });
     }
   }
@@ -363,7 +366,6 @@ app.get("/api/members", async (req, res) => {
         plan,
         payment_screenshot,
         payment_status,
-        created_at
       FROM public.members
       ORDER BY created_at DESC
     `);
