@@ -265,7 +265,7 @@ app.post(
       if (!name || !email || !phone || !plan || !req.file) {
         return res.status(400).json({
           success: false,
-          message: "Fill in all fields and upload your payment screenshot."
+          message: "Fill in all fields and upload payment screenshot."
         });
       }
 
@@ -291,7 +291,7 @@ app.post(
         });
       }
 
-      // Upload payment screenshot to Supabase Storage
+      // Upload screenshot
       uploadedPath = `payments/${Date.now()}-${Math.random()
         .toString(36)
         .slice(2)}.${extension}`;
@@ -304,21 +304,28 @@ app.post(
             upsert: false
           });
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
-      // Save member information in Supabase PostgreSQL
-      const result = await db.query(
-        `INSERT INTO public.members
-          (full_name, email, phone, membership_plan)
-         VALUES ($1, $2, $3, $4)
-         RETURNING *`,
+      // Save member in PostgreSQL
+      const result = await db.query(`
+        INSERT INTO public.members
+        (
+          full_name,
+          email,
+          phone,
+          membership_plan,
+          payment_screenshot,
+          payment_status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *`,
         [
           name.trim(),
           email.trim(),
           phone.trim(),
-          plan
+          plan,
+          uploadedPath,
+          "Pending"
         ]
       );
 
@@ -329,7 +336,7 @@ app.post(
       });
 
     } catch (error) {
-      console.error("Registration error:", error.message);
+      console.error("Registration error:", error);
 
       if (uploadedPath) {
         await supabaseStorage.storage
@@ -348,20 +355,20 @@ app.post(
 app.get("/api/members", async (req, res) => {
   try {
     const result = await db.query(`
-  SELECT
-    id,
-    full_name,
-    email,
-    phone,
-    plan,
-    payment_screenshot,
-    payment_status,
-    created_at
-  FROM public.members
-  ORDER BY created_at DESC
-`);
+      SELECT
+        id,
+        full_name,
+        email,
+        phone,
+        membership_plan AS plan,
+        payment_screenshot,
+        payment_status,
+        created_at
+      FROM public.members
+      ORDER BY created_at DESC
+    `);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       members: result.rows
     });
@@ -369,9 +376,9 @@ app.get("/api/members", async (req, res) => {
   } catch (error) {
     console.error("Get members error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to load members."
+      message: "Failed to retrieve members"
     });
   }
 });
