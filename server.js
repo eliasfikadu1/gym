@@ -347,12 +347,19 @@ app.post(
 );
 app.get("/api/members", async (req, res) => {
   try {
-    const result = await db.query(
-      SELECT id, full_name, email, phone,
-              membership_plan, created_at
-       FROM public.members
-       ORDER BY created_at DESC
-    );
+    const result = await db.query(`
+  SELECT
+    id,
+    full_name,
+    email,
+    phone,
+    plan,
+    payment_screenshot,
+    payment_status,
+    created_at
+  FROM public.members
+  ORDER BY created_at DESC
+`);
 
     res.status(200).json({
       success: true,
