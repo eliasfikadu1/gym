@@ -19,15 +19,21 @@ form.addEventListener("submit", async (e) => {
 
     const data = await res.json();
 
-    if (data.success) {
+    if (res.ok && data.success) {
       message.style.color = "#4CAF50";
       message.textContent = "Registration successful!";
+
       form.reset();
+
+      window.location.href = "admin.html";
     } else {
       message.style.color = "#ff4d4d";
-      message.textContent = data.message;
+      message.textContent =
+        data.message || "Registration failed.";
     }
+
   } catch (err) {
+    console.error(err);
     message.style.color = "#ff4d4d";
     message.textContent = "Server connection failed.";
   }

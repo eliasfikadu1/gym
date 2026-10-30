@@ -345,6 +345,29 @@ app.post(
     }
   }
 );
+app.get("/api/members", async (req, res) => {
+  try {
+    const result = await db.query(
+      SELECT id, full_name, email, phone,
+              membership_plan, created_at
+       FROM public.members
+       ORDER BY created_at DESC
+    );
+
+    res.status(200).json({
+      success: true,
+      members: result.rows
+    });
+
+  } catch (error) {
+    console.error("Get members error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load members."
+    });
+  }
+});
 // Admin logout
 app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   req.session.destroy((err) => {
