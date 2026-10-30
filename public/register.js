@@ -12,7 +12,7 @@ form.addEventListener("submit", async (e) => {
   message.textContent = "Registering...";
 
   try {
-    const res = await fetch(${API}/api/members, {
+    const res = await fetch(`${API}/api/members`, {
       method: "POST",
       body: formData
     });
@@ -25,7 +25,6 @@ form.addEventListener("submit", async (e) => {
 
       form.reset();
 
-      window.location.href = "admin.html";
     } else {
       message.style.color = "#ff4d4d";
       message.textContent =
@@ -33,7 +32,8 @@ form.addEventListener("submit", async (e) => {
     }
 
   } catch (err) {
-    console.error(err);
+    console.error("Registration error:", err);
+
     message.style.color = "#ff4d4d";
     message.textContent = "Server connection failed.";
   }
