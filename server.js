@@ -160,7 +160,7 @@ app.get("/login.html", (req, res) => {
 });
 
 // Admin login API
-app.post("/api/admin/login", (req, res, next) => {
+app.post("/api/admin/login", (req, res) => {
   const { adminUsername, adminPassword } = req.body || {};
 
   const correctUsername = process.env.ADMIN_USERNAME;
@@ -169,7 +169,7 @@ app.post("/api/admin/login", (req, res, next) => {
   if (
     typeof adminUsername !== "string" ||
     typeof adminPassword !== "string" ||
-    !adminUsername ||
+    !adminUsername.trim() ||
     !adminPassword
   ) {
     return res.status(400).json({
@@ -178,8 +178,17 @@ app.post("/api/admin/login", (req, res, next) => {
     });
   }
 
+  if (!correctUsername || !correctPassword) {
+    console.error("Admin credentials are not configured.");
+
+    return res.status(500).json({
+      success: false,
+      message: "Admin login is not configured on the server."
+    });
+  }
+
   if (
-    adminUsername.trim() !== correctUsername ||
+    adminUsername.trim() !== correctUsername.trim() ||
     adminPassword !== correctPassword
   ) {
     return res.status(401).json({
@@ -210,10 +219,11 @@ app.post("/api/admin/login", (req, res, next) => {
           message: "Could not save admin session."
         });
       }
+
       return res.json({
         success: true,
         message: "Login successful",
-        redirect: `${backendUrl}/admin.html`
+        redirect: "/admin.html"
       });
     });
   });
@@ -227,7 +237,6 @@ app.get("/api/admin/check", requireAdmin, (req, res) => {
     username: req.session.adminUsername
   });
 });
-
 // Protected admin dashboard
 app.get("/admin.html", requireAdmin, (req, res) => {
   res.sendFile(
@@ -380,7 +389,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
- PORT = process.env.PORT || 10000;
+
 
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Gym Backend running on port ${PORT}`);

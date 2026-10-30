@@ -167,63 +167,63 @@
     <a class="back-link" href="index.html">← Back to Home</a>
   </main>
 
-  <script>
-    const form = document.getElementById("adminLoginForm");
-    const message = document.getElementById("loginMessage");
-    const button = form.querySelector('button[type="submit"]');
+ <script>
+  const form = document.getElementById("adminLoginForm");
+  const message = document.getElementById("loginMessage");
+  const button = form.querySelector('button[type="submit"]');
 
-    const API_URL = "https://gym-cdb7.onrender.com";
+  const API_URL = "https://gym-cdb7.onrender.com";
 
-    form.addEventListener("submit", async function (event) {
-      event.preventDefault();
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-      const username = form.elements.username.value.trim();
-      const password = form.elements.password.value;
+    const username = form.elements.username.value.trim();
+    const password = form.elements.password.value;
 
-      message.textContent = "";
-      button.disabled = true;
-      button.textContent = "Logging in...";
-      try {
-        const response = await fetch(
-          `${API_URL}/api/admin/login`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            credentials: "include",
-           body: JSON.stringify({
-  adminUsername: username,
-  adminPassword: password
-})
-          }
-        );
+    message.textContent = "";
+    button.disabled = true;
+    button.textContent = "Logging in...";
 
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok || result.success !== true) {
-          message.textContent =
-            result.message ||
-            (response.status === 404
-              ? "Login API not found. Check the backend route."
-              : "Login failed. Check your username and password.");
-          return;
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            adminUsername: username,
+            adminPassword: password
+          })
         }
+      );
 
-        window.location.replace(
-          result.redirect || "admin.html"
-        );
+      const result = await response.json().catch(() => ({}));
 
-      } catch (error) {
-        console.error("Login error:", error);
-
+      if (!response.ok || result.success !== true) {
         message.textContent =
-          "Cannot connect to the server. Check backend, CORS, and network.";
-      } finally {
-        button.disabled = false;
-        button.textContent = "Login";
+          result.message ||
+          (response.status === 404
+            ? "Login API not found. Check backend route."
+            : "Login failed. Check username and password.");
+        return;
       }
-    });
-  </script>
+
+      window.location.replace(
+        result.redirect || "admin.html"
+      );
+
+    } catch (error) {
+      console.error("Login error:", error);
+      message.textContent =
+        "Cannot connect to server. Check backend and network.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "Login";
+    }
+  });
+</script>
 </body>
 </html>
