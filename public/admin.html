@@ -646,10 +646,13 @@ td {
         <thead>
           <tr>
             <th>Member ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>payment_scrrenshot</th>
-            <th>Status</th>
+<th>Name</th>
+<th>Email</th>
+<th>Phone</th>
+<th>Plan</th>
+<th>Payment Screenshot</th>
+<th>Status</th>
+<th>Date</th>
           </tr>
         </thead>
         <tbody id="memberList">
@@ -678,68 +681,96 @@ td {
     © 2026 I-JO House GYM · ADMIN DASHBOARD
   </footer>
 </main>
-
 <script>
 document.querySelectorAll('.sidebar nav a').forEach(link => {
   link.addEventListener('click', function () {
     document.querySelectorAll('.sidebar nav a')
       .forEach(item => item.classList.remove('active'));
+
     this.classList.add('active');
   });
 });
 
-document.getElementById('logoutBtn').addEventListener('click', function (e) {
+document.getElementById('logoutBtn')?.addEventListener('click', async function (e) {
   e.preventDefault();
 
   if (confirm('Are you sure you want to logout?')) {
-    // Clear your application's login session here
+    try {
+      await fetch('https://gym-cdb7.onrender.com/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
     window.location.href = 'login.html';
   }
 });
 
-document.getElementById('refreshBtn').addEventListener('click', function () {
-  loadMembers();
-});
+document.getElementById('refreshBtn')?.addEventListener('click', loadMembers);
 
 async function loadMembers() {
   const list = document.getElementById('memberList');
   const message = document.getElementById('memberMessage');
 
   list.innerHTML = 
-    <tr><td colspan="4" class="empty">Loading members...</td></tr>
+    <tr>
+      <td colspan="8" class="empty">Loading members...</td>
+    </tr>
   ;
+
   message.textContent = '';
 
   try {
-    // Replace this URL with the actual members endpoint in server.js.
-   const response = await fetch(
-  "https://gym-cdb7.onrender.com/api/members",
-  {
-    credentials: "include"
-  }
-);
-    const result = await response.json();
-    const members = Array.isArray(result) ? result : result.members;
+    const response = await fetch(
+      'https://gym-cdb7.onrender.com/api/members',
+      {
+        method: 'GET',
+        credentials: 'include'
+      }
+    );
 
-    if (!Array.isArray(members)) {
-      throw new Error('Unexpected API response.');
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
     }
 
-    document.getElementById('totalMembers').textContent = members.length;
+    const result = await response.json();
 
-    const thisMonth = new Date();
+    if (result.success === false) {
+      throw new Error(result.message || 'Failed to load members.');
+    }
+
+    const members = result.members;
+
+    if (!Array.isArray(members)) {
+      throw new Error('Invalid members data.');
+    }
+
+    document.getElementById('totalMembers').textContent =
+      members.length;
+
+    const currentDate = new Date();
+
     const newMembers = members.filter(member => {
-      if (!member.created_at && !member.createdAt) return false;
-      const date = new Date(member.created_at || member.createdAt);
-      return date.getMonth() === thisMonth.getMonth() &&
-             date.getFullYear() === thisMonth.getFullYear();
+      if (!member.created_at) return false;
+
+      const date = new Date(member.created_at);
+
+      return date.getMonth() === currentDate.getMonth() &&
+        date.getFullYear() === currentDate.getFullYear();
     });
 
-    document.getElementById('newMembers').textContent = newMembers.length;
+    document.getElementById('newMembers').textContent =
+      newMembers.length;
 
     if (members.length === 0) {
       list.innerHTML = 
-        <tr><td colspan="4" class="empty">No registered members found.</td></tr>
+        <tr>
+          <td colspan="8" class="empty">
+            No registered members found.
+          </td>
+        </tr>
       ;
       return;
     }
@@ -747,52 +778,74 @@ async function loadMembers() {
     list.innerHTML = '';
 
     members.forEach(member => {
-  const row = document.createElement("tr");
+      const row = document.createElement('tr');
 
-  const values = [
-    member.id ?? "—",
-    member.full_name ?? member.name ?? "—",
-    member.email ?? "—",
-    "Registered"
-  ];
+      const values = [
+        member.id ?? '—',
+        member.full_name ?? '—',
+        member.email ?? '—',
+        member.phone ?? '—',
+        member.membership_plan ?? member.plan ?? '—'
+      ];
 
-  values.forEach(value => {
-    const cell = document.createElement("td");
-    cell.textContent = value;
-    row.appendChild(cell);
-  });
+      values.forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
 
-  const screenshotCell = document.createElement("td");
+      // Payment screenshot
+      const screenshotCell = document.createElement('td');
 
-  if (member.payment_screenshot_url) {
-    const link = document.createElement("a");
-    link.href = member.payment_screenshot_url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = "View Screenshot";
-    link.style.color = "#d4af37";
+      if (member.payment_screenshot_url) {
+        const link = document.createElement('a');
 
-    screenshotCell.appendChild(link);
-  } else {
-    screenshotCell.textContent = "No screenshot";
-  }
+        link.href = member.payment_screenshot_url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'View Screenshot';
+        link.style.color = '#d4af37';
 
-  row.appendChild(screenshotCell);
-  list.appendChild(row);
-});
+        screenshotCell.appendChild(link);
+      } else {
+        screenshotCell.textContent = 'No screenshot';
+      }
+
+      row.appendChild(screenshotCell);
+
+      // Payment status
+      const statusCell = document.createElement('td');
+      statusCell.textContent = member.payment_status || 'Pending';
+      row.appendChild(statusCell);
+
+      // Registration date
+      const dateCell = document.createElement('td');
+
+      dateCell.textContent = member.created_at
+        ? new Date(member.created_at).toLocaleDateString()
+        : '—';
+
+      row.appendChild(dateCell);
+
+      list.appendChild(row);
+    });
 
   } catch (error) {
+    console.error('Load members error:', error);
+
     list.innerHTML = 
       <tr>
-        <td colspan="4" class="empty">
-          Could not load members. Check your backend and API endpoint.
+        <td colspan="8" class="empty">
+          Could not load members.
         </td>
       </tr>
     ;
+
     message.textContent = error.message;
   }
 }
-</script>
 
+loadMembers();
+</script>
 </body>
 </html>

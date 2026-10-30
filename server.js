@@ -360,7 +360,7 @@ app.get("/api/members", async (req, res) => {
         full_name,
         email,
         phone,
-        membership_plan AS plan,
+        plan,
         payment_screenshot,
         payment_status,
         created_at
@@ -368,9 +368,34 @@ app.get("/api/members", async (req, res) => {
       ORDER BY created_at DESC
     `);
 
+    const members = await Promise.all(
+      result.rows.map(async (member) => {
+        let screenshotUrl = null;
+
+        if (member.payment_screenshot) {
+          const { data, error } =
+            await supabaseStorage.storage
+              .from("payment-screenshots")
+              .createSignedUrl(
+                member.payment_screenshot,
+                3600
+              );
+
+          if (!error) {
+            screenshotUrl = data.signedUrl;
+          }
+        }
+
+        return {
+          ...member,
+          payment_screenshot_url: screenshotUrl
+        };
+      })
+    );
+
     return res.status(200).json({
       success: true,
-      members: result.rows
+      members
     });
 
   } catch (error) {
