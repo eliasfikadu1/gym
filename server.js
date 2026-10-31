@@ -395,7 +395,7 @@ app.get("/api/members", async (req, res) => {
 
         if (member.payment_screenshot) {
           const { data, error } =
-            await supabaseStorage.storage
+            await supabaseStorage.storagenst
               .from("payment-screenshots")
               .createSignedUrl(
                 member.payment_screenshot,
@@ -498,6 +498,11 @@ function shutdown() {
       .finally(() => process.exit(0));
   });
 }
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
