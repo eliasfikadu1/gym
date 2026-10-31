@@ -3,56 +3,55 @@ const message = document.getElementById("registerMessage");
 
 const API = "https://gym-cdb7.onrender.com";
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+if (!form || !message) {
+  console.error("Register form or message element not found.");
+} else {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const formData = new FormData(form);
+    const formData = new FormData(form);
 
-  message.style.color = "#d4af37";
-  message.textContent = "Registering...";
+    message.style.color = "#d4af37";
+    message.textContent = "Registering...";
 
-  try {
-    const res = await fetch(${API}/api/members, {
-      method: "POST",
-      body: formData
-    });
+    try {
+      const res = await fetch(`${API}/api/members`, {
+        method: "POST",
+        body: formData
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok && data.success) {
-      message.style.color = "#4CAF50";
-      message.textContent = "Registration successful!";
+      if (res.ok && data.success) {
+        message.style.color = "#4CAF50";
+        message.textContent = "Registration successful!";
 
-      // Save member details for the member dashboard
-      sessionStorage.setItem(
-        "gymMember",
-        JSON.stringify({
-          name: formData.get("name"),
-          email: formData.get("email"),
-          phone: formData.get("phone"),
-          plan: formData.get("plan")
-        })
-      );
+        sessionStorage.setItem(
+          "gymMember",
+          JSON.stringify({
+            name: formData.get("name"),
+            email: formData.get("email"),
+            phone: formData.get("phone"),
+            plan: formData.get("plan")
+          })
+        );
 
-      form.reset();
+        form.reset();
 
-      // Open Member Dashboard after successful registration
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1000);
+        setTimeout(() => {
+          window.location.href = "/dashboard.html";
+        }, 1000);
 
-    } else {
+      } else {
+        message.style.color = "#ff4d4d";
+        message.textContent = data.message || "Registration failed.";
+        console.error("Registration failed:", data);
+      }
+
+    } catch (err) {
+      console.error("Registration error:", err);
       message.style.color = "#ff4d4d";
-      message.textContent =
-        data.message || "Registration failed.";
-
-      console.error("Registration failed:", data);
+      message.textContent = "Server connection failed.";
     }
-
-  } catch (err) {
-    console.error("Registration error:", err);
-
-    message.style.color = "#ff4d4d";
-    message.textContent = "Server connection failed.";
-  }
-});
+  });
+}
