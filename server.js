@@ -359,7 +359,7 @@ app.post(
 );
 app.get("/api/members", async (req, res) => {
   try {
-    const result = await db.query(
+    const result = await db.query(`
       SELECT
         id,
         full_name,
@@ -371,23 +371,7 @@ app.get("/api/members", async (req, res) => {
         created_at
       FROM public.members
       ORDER BY created_at DESC
-    );
-
-    res.status(200).json({
-      success: true,
-      members: result.rows
-    });
-
-  } catch (error) {
-    console.error("GET MEMBERS ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to load members",
-      error: error.message
-    });
-  }
-});
+   `);
 
     const members = await Promise.all(
       result.rows.map(async (member) => {
@@ -395,7 +379,7 @@ app.get("/api/members", async (req, res) => {
 
         if (member.payment_screenshot) {
           const { data, error } =
-            await supabaseStorage.storagenst
+            await supabaseStorage.storage
               .from("payment-screenshots")
               .createSignedUrl(
                 member.payment_screenshot,
@@ -420,7 +404,7 @@ app.get("/api/members", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Get members error:", error);
+    console.error("GET MEMBERS ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -428,6 +412,7 @@ app.get("/api/members", async (req, res) => {
     });
   }
 });
+
 // Admin logout
 app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   req.session.destroy((err) => {
@@ -498,7 +483,6 @@ function shutdown() {
       .finally(() => process.exit(0));
   });
 }
-const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
