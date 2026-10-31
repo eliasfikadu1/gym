@@ -3,44 +3,17 @@ const { Pool } = require("pg");
 const session = require("express-session");
 const cors = require("cors");
 const multer = require("multer");
-require("dotenv").config();
-
 const path = require("path");
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
+require("dotenv").config();
 
 const app = express();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// ======================================
+// 1. ENVIRONMENT VARIABLES
+// ======================================
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error(
-    "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable"
-  );
-  process.exit(1);
-}
-
-const supabaseStorage = createClient(supabaseUrl, supabaseKey);
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-      return cb(null, true);
-    }
-
-    cb(new Error("Upload JPG, PNG, or WebP images only."));
-  }
-});
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -54,27 +27,57 @@ const backendUrl = (
   "https://gym-cdb7.onrender.com"
 ).replace(/\/+$/, "");
 
-// Check required environment variables
 const requiredEnv = [
   "DATABASE_URL",
   "SESSION_SECRET",
   "ADMIN_USERNAME",
-  "ADMIN_PASSWORD"
+  "ADMIN_PASSWORD",
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY"
 ];
 
 for (const key of requiredEnv) {
   if (!process.env[key]) {
-    console.error(`Missing environment variable: ${key}`);
+    console.error(Missing environment variable: ${key});
     process.exit(1);
   }
 }
 
-// Trust Render proxy for secure cookies
+// ======================================
+// 2. SUPABASE STORAGE
+// ======================================
+
+const supabaseStorage = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// ======================================
+// 3. POSTGRESQL CONNECTION
+// ======================================
+
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isProduction
+    ? { rejectUnauthorized: false }
+    : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 5
+});
+
+db.on("error", (error) => {
+  console.error("PostgreSQL Pool Error:", error.message);
+});
+
+// ======================================
+// 4. MIDDLEWARE
+// ======================================
+
 if (isProduction) {
   app.set("trust proxy", 1);
 }
 
-// CORS
 app.use(cors({
   origin: [
     frontendUrl,
@@ -89,17 +92,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Supabase PostgreSQL
-const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isProduction
-    ? { rejectUnauthorized: false }
-    : false,
-  connectionTimeoutMillis: 10000,
-  max: 5
-});
+// ======================================
+// 5. SESSION CONFIGURATION
+// ======================================
 
-// Session configuration
 app.use(session({
   name: "gym.sid",
   secret: process.env.SESSION_SECRET,
@@ -113,78 +109,145 @@ app.use(session({
   }
 }));
 
-// Check Supabase PostgreSQL connection and members table
-db.query(`
-  SELECT
-    current_database() AS database,
-    current_schema() AS schema,
-    to_regclass('public.members') AS members_table
-`)
-.then(result => {
-  console.log("DATABASE CHECK:", result.rows[0]);
+// ======================================
+// 6. PAYMENT SCREENSHOT UPLOAD
+// ======================================
 
-  if (!result.rows[0].members_table) {
-    console.error("ERROR: public.members table not found!");
-  } else {
-    console.log("SUCCESS: Members table found!");
+const upload = multer({
+  storage: multer.memoryStorage(),
+
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  },
+
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      return cb(null, true);
+    }
+
+    cb(new Error("Upload JPG, PNG, or WebP images only."));
   }
-})
-.catch(error => {
-  console.error("DATABASE CHECK ERROR:", error.message);
 });
 
-// Health check
+// ======================================
+// 7. DATABASE INITIALIZATION
+// ======================================
+
+async function initializeDatabase() {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS public.members (
+        id BIGSERIAL PRIMARY KEY,
+        full_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(50) NOT NULL,
+        membership_plan VARCHAR(100) NOT NULL,
+        payment_screenshot TEXT,
+        payment_status VARCHAR(50) DEFAULT 'Pending',
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add missing columns if the table already exists.
+
+    await db.query(`
+      ALTER TABLE public.members
+      ADD COLUMN IF NOT EXISTS full_name VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS phone VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS membership_plan VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS payment_screenshot TEXT,
+      ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending',
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    `);
+
+    const result = await db.query(`
+      SELECT
+        current_database() AS database,
+        current_schema() AS schema,
+        to_regclass('public.members') AS members_table
+    `);
+
+    console.log("DATABASE CHECK:", result.rows[0]);
+
+    if (result.rows[0].members_table) {
+      console.log("SUCCESS: Members table is ready!");
+    }
+
+    console.log("Supabase PostgreSQL Connected Successfully!");
+
+  } catch (error) {
+    console.error("DATABASE INITIALIZATION ERROR:", error.message);
+  }
+}
+
+// ======================================
+// 8. HEALTH CHECK
+// ======================================
+
 app.get("/api/health", async (req, res) => {
   try {
     await db.query("SELECT 1");
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Gym Backend is Running!",
       database: "Connected"
     });
+
   } catch (error) {
-    console.error("Health check failed:", error.message);
+    console.error("Health Check Error:", error.message);
 
     res.status(503).json({
       success: false,
-      message: "Backend is running, but database connection failed",
+      message: "Database connection failed",
       database: "Disconnected"
     });
   }
 });
 
-// Root
+// ======================================
+// 9. ROOT ROUTE
+// ======================================
+
 app.get("/", (req, res) => {
   res.json({
-    message: "Gym Backend is Running!"
+    success: true,
+    message: "I-JO House GYM Backend is Running!",
+    frontend: frontendUrl
   });
 });
 
-// Admin authentication middleware
+// ======================================
+// 10. ADMIN AUTHENTICATION
+// ======================================
+
 function requireAdmin(req, res, next) {
   if (req.session && req.session.isAdmin === true) {
     return next();
   }
 
-  if (req.path.startsWith("/api/")) {
-    return res.status(401).json({
-      success: false,
-      message: "Admin login required"
-    });
-  }
-
-  return res.redirect(`${frontendUrl}/login.html`);
+  return res.status(401).json({
+    success: false,
+    message: "Admin login required"
+  });
 }
 
-// Login page
-app.get("/login.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
+// ======================================
+// 11. ADMIN LOGIN
+// ======================================
 
-// Admin login API
 app.post("/api/admin/login", (req, res) => {
-  const { adminUsername, adminPassword } = req.body || {};
+  const {
+    adminUsername,
+    adminPassword
+  } = req.body || {};
 
   const correctUsername = process.env.ADMIN_USERNAME;
   const correctPassword = process.env.ADMIN_PASSWORD;
@@ -201,15 +264,6 @@ app.post("/api/admin/login", (req, res) => {
     });
   }
 
-  if (!correctUsername || !correctPassword) {
-    console.error("Admin credentials are not configured.");
-
-    return res.status(500).json({
-      success: false,
-      message: "Admin login is not configured on the server."
-    });
-  }
-
   if (
     adminUsername.trim() !== correctUsername.trim() ||
     adminPassword !== correctPassword
@@ -222,7 +276,7 @@ app.post("/api/admin/login", (req, res) => {
 
   req.session.regenerate((err) => {
     if (err) {
-      console.error("Session regenerate error:", err);
+      console.error("Session Error:", err.message);
 
       return res.status(500).json({
         success: false,
@@ -235,7 +289,7 @@ app.post("/api/admin/login", (req, res) => {
 
     req.session.save((saveError) => {
       if (saveError) {
-        console.error("Session save error:", saveError);
+        console.error("Session Save Error:", saveError.message);
 
         return res.status(500).json({
           success: false,
@@ -246,13 +300,16 @@ app.post("/api/admin/login", (req, res) => {
       return res.json({
         success: true,
         message: "Login successful",
-        redirect: "/admin.html"
+        redirect: `${frontendUrl}/admin.html`
       });
     });
   });
 });
 
-// Check admin session
+// ======================================
+// 12. CHECK ADMIN SESSION
+// ======================================
+
 app.get("/api/admin/check", requireAdmin, (req, res) => {
   res.json({
     success: true,
@@ -260,33 +317,56 @@ app.get("/api/admin/check", requireAdmin, (req, res) => {
     username: req.session.adminUsername
   });
 });
-// Protected admin dashboard
+
+// ======================================
+// 13. ADMIN DASHBOARD API
+// ======================================
+app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    message: "Welcome to I-JO House GYM Admin Dashboard",
+    username: req.session.adminUsername
+  });
+});
+
+// ======================================
+// 14. PROTECTED ADMIN PAGE
+// ======================================
+
 app.get("/admin.html", requireAdmin, (req, res) => {
   res.sendFile(
     path.join(__dirname, "public", "admin.html")
   );
 });
 
-// Admin dashboard API
-app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
-  res.json({
-    success: true,
-    message: "Welcome to the Admin Dashboard",
-    username: req.session.adminUsername
-  });
-});
-// Register member and upload payment screenshot
+// ======================================
+// 15. REGISTER NEW MEMBER
+// ======================================
+
 app.post(
   "/api/members",
   upload.single("paymentScreenshot"),
   async (req, res) => {
+
     let uploadedPath = null;
 
     try {
-      const { name, email, phone, plan } = req.body;
+      const {
+        name,
+        email,
+        phone,
+        plan
+      } = req.body;
 
-      // Validate fields
-      if (!name || !email || !phone || !plan || !req.file) {
+      // Validate registration fields
+
+      if (
+        !name ||
+        !email ||
+        !phone ||
+        !plan ||
+        !req.file
+      ) {
         return res.status(400).json({
           success: false,
           message: "Fill in all fields and upload payment screenshot."
@@ -299,6 +379,24 @@ app.post(
           message: "Invalid membership plan."
         });
       }
+
+      const cleanName = name.trim();
+      const cleanEmail = email.trim();
+      const cleanPhone = phone.trim();
+
+      if (
+        !cleanName ||
+        !cleanEmail ||
+        !cleanPhone ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Please enter valid registration information."
+        });
+      }
+
+      // File extension
 
       const extensions = {
         "image/jpeg": "jpg",
@@ -315,25 +413,32 @@ app.post(
         });
       }
 
-      // Upload payment screenshot
-      uploadedPath = `payments/${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}.${extension}`;
+      // Upload payment screenshot to Supabase Storage
+
+      uploadedPath =
+        payments/${crypto.randomUUID()}.${extension};
 
       const { error: uploadError } =
         await supabaseStorage.storage
           .from("payment-screenshots")
-          .upload(uploadedPath, req.file.buffer, {
-            contentType: req.file.mimetype,
-            upsert: false
-          });
+          .upload(
+            uploadedPath,
+            req.file.buffer,
+            {
+              contentType: req.file.mimetype,
+              upsert: false
+            }
+          );
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
-      // Save member to Supabase PostgreSQL
+      // Save member information to PostgreSQL
+
       const result = await db.query(`
-        INSERT INTO public.members
-        (
+        
+        INSERT INTO public.members (
           full_name,
           email,
           phone,
@@ -342,18 +447,22 @@ app.post(
           payment_status
         )
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *`,
+        RETURNING *
+       ` ,
         [
-          name.trim(),
-          email.trim(),
-          phone.trim(),
+          cleanName,
+          cleanEmail,
+          cleanPhone,
           plan,
           uploadedPath,
           "Pending"
         ]
       );
 
-      console.log("New member registered:", result.rows[0]);
+      console.log(
+        "NEW MEMBER REGISTERED:",
+        result.rows[0].id
+      );
 
       return res.status(201).json({
         success: true,
@@ -362,23 +471,36 @@ app.post(
       });
 
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("REGISTRATION ERROR:", error);
+
+      // Remove uploaded image if database insertion fails
 
       if (uploadedPath) {
-        await supabaseStorage.storage
-          .from("payment-screenshots")
-          .remove([uploadedPath])
-          .catch(() => {});
+        try {
+          await supabaseStorage.storage
+            .from("payment-screenshots")
+            .remove([uploadedPath]);
+        } catch (removeError) {
+          console.error(
+            "Storage Cleanup Error:",
+            removeError.message
+          );
+        }
       }
 
       return res.status(500).json({
         success: false,
-        message: error.message || "Registration failed."
+        message: "Registration failed. Please try again."
       });
     }
   }
 );
-app.get("/api/members", async (req, res) => {
+
+// ======================================
+// 16. GET ALL REGISTERED MEMBERS
+// ADMIN ONLY
+// ======================================
+app.get("/api/members", requireAdmin, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT
@@ -391,11 +513,14 @@ app.get("/api/members", async (req, res) => {
         payment_status,
         created_at
       FROM public.members
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
     `);
+
+    // Generate private screenshot URLs
 
     const members = await Promise.all(
       result.rows.map(async (member) => {
+
         let screenshotUrl = null;
 
         if (member.payment_screenshot) {
@@ -421,23 +546,30 @@ app.get("/api/members", async (req, res) => {
 
     return res.status(200).json({
       success: true,
+      total: members.length,
       members
     });
 
   } catch (error) {
-    console.error("Get members error:", error);
+    console.error("GET MEMBERS ERROR:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to retrieve members"
+      message: "Failed to retrieve members."
     });
   }
 });
-// Admin logout
-app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
+
+// ======================================
+// 17. ADMIN LOGOUT
+// ======================================
+
+app.post("/api/admin/logout", requireAdmin, (req, res) => {
+
   req.session.destroy((err) => {
+
     if (err) {
-      console.error("Logout error:", err);
+      console.error("Logout Error:", err.message);
 
       return res.status(500).json({
         success: false,
@@ -459,48 +591,89 @@ app.post("/api/admin/logout", requireAdmin, (req, res, next) => {
   });
 });
 
-// Serve other public files
-app.use(express.static(path.join(__dirname, "public")));
+// ======================================
+// 18. SERVE PUBLIC FILES
+// ======================================
 
-// Error handler
+app.use(express.static(
+  path.join(__dirname, "public")
+));
+
+// ======================================
+// 19. NOT FOUND
+// ======================================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found"
+  });
+});
+
+// ======================================
+// 20. ERROR HANDLER
+// ======================================
+
 app.use((err, req, res, next) => {
-  console.error("Server error:", err.message);
+
+  console.error("SERVER ERROR:", err.message);
 
   if (res.headersSent) {
     return next(err);
   }
 
+  if (
+    err instanceof multer.MulterError ||
+    err.message.includes("Upload JPG")
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+
   res.status(500).json({
     success: false,
-    message: "Internal server error"
+    message: "Internal server error."
   });
 });
 
-// Start server
-
+// ======================================
+// 21. START SERVER
+// ======================================
 
 const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Gym Backend running on port ${PORT}`);
 
-  db.query("SELECT 1")
-    .then(() => {
-      console.log("Supabase PostgreSQL Connected Successfully!");
-    })
-    .catch((error) => {
-      console.error("Database connection failed!");
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-    });
+  console.log(
+    `I-JO House GYM Backend running on port ${PORT}`
+  );
+
+  initializeDatabase();
 });
 
-// Graceful shutdown
+// ======================================
+// 22. GRACEFUL SHUTDOWN
+// ======================================
+
 function shutdown() {
+
+  console.log("Shutting down server...");
+
   server.close(() => {
+
     db.end()
-      .catch((error) => {
-        console.error("Database shutdown error:", error.message);
+      .then(() => {
+        console.log("Database connection closed.");
+        process.exit(0);
       })
-      .finally(() => process.exit(0));
+      .catch((error) => {
+        console.error(
+          "Database shutdown error:",
+          error.message
+        );
+        process.exit(1);
+      });
+
   });
 }
 
