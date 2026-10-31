@@ -24,7 +24,9 @@ const supabaseStorage = createClient(supabaseUrl, supabaseKey);
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
       "image/jpeg",
@@ -110,6 +112,13 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
+db.query("SELECT current_database(), current_schema(), to_regclass('public.members')")
+  .then(result => {
+    console.log("DATABASE CHECK:", result.rows[0]);
+  })
+  .catch(error => {
+    console.error("DATABASE CHECK ERROR:", error.message);
+  });
 // Health check
 app.get("/api/health", async (req, res) => {
   try {
