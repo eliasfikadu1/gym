@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Dashboard | I-JO House GYM</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <main class="dashboard">
+    <h1>I-JO House GYM</h1>
+    <h2>Member Dashboard</h2>
+
+    <p id="welcome">Welcome!</p>
+
+    <div class="member-info">
+      <p>Name: <span id="memberName"></span></p>
+      <p>Email: <span id="memberEmail"></span></p>
+      <p>Phone: <span id="memberPhone"></span></p>
+      <p>Plan: <span id="memberPlan"></span></p>
+    </div>
+
+    <button onclick="logout()">Logout</button>
+  </main>
+
+  <script>
+    const member = JSON.parse(
+      sessionStorage.getItem("gymMember") || "null"
+    );
+
+    if (!member) {
+      window.location.href = "register.html";
+    } else {
+      document.getElementById("welcome").textContent =
+        "Welcome, " + member.name + "!";
+
+      document.getElementById("memberName").textContent = member.name;
+      document.getElementById("memberEmail").textContent = member.email;
+      document.getElementById("memberPhone").textContent = member.phone;
+      document.getElementById("memberPlan").textContent = member.plan;
+    }
+
+    function logout() {
+      sessionStorage.removeItem("gymMember");
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>

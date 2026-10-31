@@ -12,7 +12,7 @@ form.addEventListener("submit", async (e) => {
   message.textContent = "Registering...";
 
   try {
-    const res = await fetch(`${API}/api/members`, {
+    const res = await fetch(${API}/api/members, {
       method: "POST",
       body: formData
     });
@@ -23,7 +23,24 @@ form.addEventListener("submit", async (e) => {
       message.style.color = "#4CAF50";
       message.textContent = "Registration successful!";
 
+      // Save member details for the member dashboard
+      sessionStorage.setItem(
+        "gymMember",
+        JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          phone: formData.get("phone"),
+          plan: formData.get("plan")
+        })
+      );
+
       form.reset();
+
+      // Open Member Dashboard after successful registration
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1000);
+
     } else {
       message.style.color = "#ff4d4d";
       message.textContent =
