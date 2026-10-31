@@ -112,20 +112,14 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
-db.query("SELECT current_database(), current_schema(), to_regclass('public.members')")
-  .then(result => {
-    console.log("DATABASE CHECK:", result.rows[0]);
-  })
-  .catch(error => {
-    console.error("DATABASE CHECK ERROR:", error.message);
-  });
-  // Check Supabase PostgreSQL connection
-db.query(
+
+// Check Supabase PostgreSQL connection and members table
+db.query(`
   SELECT
     current_database() AS database,
     current_schema() AS schema,
     to_regclass('public.members') AS members_table
-)
+`)
 .then(result => {
   console.log("DATABASE CHECK:", result.rows[0]);
 
@@ -138,6 +132,7 @@ db.query(
 .catch(error => {
   console.error("DATABASE CHECK ERROR:", error.message);
 });
+
 // Health check
 app.get("/api/health", async (req, res) => {
   try {
