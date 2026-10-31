@@ -652,6 +652,7 @@ td {
 <th>Plan</th>
 <th>Payment Screenshot</th>
 <th>Payment Status</th>
+<th>Registration Date</th>
           </tr>
         </thead>
         <tbody id="memberList">
@@ -685,38 +686,38 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
   link.addEventListener('click', function () {
     document.querySelectorAll('.sidebar nav a')
       .forEach(item => item.classList.remove('active'));
-
     this.classList.add('active');
   });
 });
 
-document.getElementById('logoutBtn')?.addEventListener('click', async function (e) {
+// Logout
+document.getElementById('logoutBtn')?.addEventListener('click', async e => {
   e.preventDefault();
 
-  if (confirm('Are you sure you want to logout?')) {
-    try {
-      await fetch('https://gym-cdb7.onrender.com/api/admin/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  if (!confirm('Are you sure you want to logout?')) return;
 
-    window.location.href = 'login.html';
+  try {
+    await fetch('https://gym-cdb7.onrender.com/api/admin/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
   }
+
+  window.location.href = 'login.html';
 });
 
-document.getElementById('refreshBtn')?.addEventListener('click', loadMembers);
+// Refresh
+document.getElementById('refreshBtn')
+  ?.addEventListener('click', loadMembers);
 
 async function loadMembers() {
   const list = document.getElementById('memberList');
   const message = document.getElementById('memberMessage');
 
   list.innerHTML = 
-    <tr>
-      <td colspan="8" class="empty">Loading members...</td>
-    </tr>
+    <tr><td colspan="8" class="empty">Loading members...</td></tr>
   ;
 
   message.textContent = '';
@@ -749,15 +750,15 @@ async function loadMembers() {
     document.getElementById('totalMembers').textContent =
       members.length;
 
-    const currentDate = new Date();
+    const now = new Date();
 
     const newMembers = members.filter(member => {
       if (!member.created_at) return false;
 
       const date = new Date(member.created_at);
 
-      return date.getMonth() === currentDate.getMonth() &&
-        date.getFullYear() === currentDate.getFullYear();
+      return date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
     });
 
     document.getElementById('newMembers').textContent =
@@ -793,18 +794,20 @@ async function loadMembers() {
         row.appendChild(cell);
       });
 
-      // Payment screenshot
+      // Screenshot
       const screenshotCell = document.createElement('td');
 
-      if (member.payment_screenshot_url) {
-        const link = document.createElement('a');
+      const screenshotUrl =
+        member.payment_screenshot_url ||
+        member.payment_screenshot;
 
-        link.href = member.payment_screenshot_url;
+      if (screenshotUrl) {
+        const link = document.createElement('a');
+        link.href = screenshotUrl;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = 'View Screenshot';
         link.style.color = '#d4af37';
-
         screenshotCell.appendChild(link);
       } else {
         screenshotCell.textContent = 'No screenshot';
@@ -819,7 +822,6 @@ async function loadMembers() {
 
       // Registration date
       const dateCell = document.createElement('td');
-
       dateCell.textContent = member.created_at
         ? new Date(member.created_at).toLocaleDateString()
         : '—';
