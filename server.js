@@ -359,7 +359,7 @@ app.post(
 );
 app.get("/api/members", async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await db.query(
       SELECT
         id,
         full_name,
@@ -371,7 +371,23 @@ app.get("/api/members", async (req, res) => {
         created_at
       FROM public.members
       ORDER BY created_at DESC
-    `);
+    );
+
+    res.status(200).json({
+      success: true,
+      members: result.rows
+    });
+
+  } catch (error) {
+    console.error("GET MEMBERS ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load members",
+      error: error.message
+    });
+  }
+});
 
     const members = await Promise.all(
       result.rows.map(async (member) => {
