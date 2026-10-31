@@ -119,6 +119,25 @@ db.query("SELECT current_database(), current_schema(), to_regclass('public.membe
   .catch(error => {
     console.error("DATABASE CHECK ERROR:", error.message);
   });
+  // Check Supabase PostgreSQL connection
+db.query(
+  SELECT
+    current_database() AS database,
+    current_schema() AS schema,
+    to_regclass('public.members') AS members_table
+)
+.then(result => {
+  console.log("DATABASE CHECK:", result.rows[0]);
+
+  if (!result.rows[0].members_table) {
+    console.error("ERROR: public.members table not found!");
+  } else {
+    console.log("SUCCESS: Members table found!");
+  }
+})
+.catch(error => {
+  console.error("DATABASE CHECK ERROR:", error.message);
+});
 // Health check
 app.get("/api/health", async (req, res) => {
   try {
