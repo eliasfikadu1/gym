@@ -837,13 +837,13 @@ console.log("MEMBERS:", result.members);
   } catch (error) {
     console.error('Load members error:', error);
 
-    list.innerHTML = 
+    list.innerHTML =`
       <tr>
         <td colspan="8" class="empty">
           Could not load members.
         </td>
       </tr>
-    ;
+    `;
 
     message.textContent = error.message;
   }
