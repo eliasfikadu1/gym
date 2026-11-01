@@ -26,30 +26,19 @@ if (!form || !message) {
         message.style.color = "#4CAF50";
         message.textContent = "Registration successful!";
 
-        sessionStorage.setItem(
-          "gymMember",
-          JSON.stringify({
-            name: formData.get("name"),
-            email: formData.get("email"),
-            phone: formData.get("phone"),
-            plan: formData.get("plan")
-          })
-        );
-
         form.reset();
-
-        setTimeout(() => {
-          window.location.href = "/dashboard.html";
-        }, 1000);
 
       } else {
         message.style.color = "#ff4d4d";
-        message.textContent = data.message || "Registration failed.";
+        message.textContent =
+          data.message || "Registration failed.";
+
         console.error("Registration failed:", data);
       }
 
     } catch (err) {
       console.error("Registration error:", err);
+
       message.style.color = "#ff4d4d";
       message.textContent = "Server connection failed.";
     }
