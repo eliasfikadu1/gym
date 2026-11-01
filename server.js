@@ -370,7 +370,7 @@ app.get("/api/members", async (req, res) => {
         payment_status,
         created_at
       FROM public.members
-      ORDER BY created_at DESC
+      ORDER BY created_at ASC
    `);
 
     const members = await Promise.all(
