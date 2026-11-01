@@ -736,6 +736,9 @@ async function loadMembers() {
     }
 
     const result = await response.json();
+    console.log("API STATUS:", response.status);
+console.log("API RESULT:", result);
+console.log("MEMBERS:", result.members);
 
     if (result.success === false) {
       throw new Error(result.message || 'Failed to load members.');
@@ -765,13 +768,13 @@ async function loadMembers() {
       newMembers.length;
 
     if (members.length === 0) {
-      list.innerHTML = 
+      list.innerHTML = `
         <tr>
           <td colspan="8" class="empty">
             No registered members found.
           </td>
         </tr>
-      ;
+      `;
       return;
     }
 
